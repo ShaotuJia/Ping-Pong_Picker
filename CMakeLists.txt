@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(ping_pong_picker)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-# add_compile_options(-std=c++11)
+add_compile_options(-std=c++11)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -11,6 +11,11 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
+  geometry_msgs
+  turtlebot_gazebo
+  kobuki_msgs
+  roslaunch
+  gazebo_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -68,10 +73,13 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs
-# )
+generate_messages(
+   DEPENDENCIES
+   std_msgs
+   geometry_msgs
+   kobuki_msgs
+   gazebo_msgs
+ )
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -104,7 +112,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES ping-pong_picker
+#  LIBRARIES turtlebot_walker
 #  CATKIN_DEPENDS roscpp rospy std_msgs
 #  DEPENDS system_lib
 )
@@ -116,13 +124,13 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-# include
+ include
   ${catkin_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/ping-pong_picker.cpp
+#   src/${PROJECT_NAME}/turtlebot_walker.cpp
 # )
 
 ## Add cmake target dependencies of the library
@@ -133,7 +141,7 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-# add_executable(${PROJECT_NAME}_node src/ping-pong_picker_node.cpp)
+# add_executable(${PROJECT_NAME}_node src/turtlebot_walker_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -149,6 +157,11 @@ include_directories(
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
 # )
+
+add_executable(picker src/main.cpp src/walker.cpp)
+target_link_libraries(picker ${catkin_LIBRARIES})
+add_dependencies(picker turtlebot_walker_generate_messages_cpp)
+roslaunch_add_file_check(launch)
 
 #############
 ## Install ##
@@ -190,7 +203,7 @@ include_directories(
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_ping-pong_picker.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_turtlebot_walker.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()

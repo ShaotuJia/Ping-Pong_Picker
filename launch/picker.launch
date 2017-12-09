@@ -5,4 +5,6 @@
   <arg name="world_file" value="$(find ping_pong_picker)/worlds/ping_pong_court"/>
 </include>
 
+<node name="picker" pkg="ping_pong_picker" type="picker" />
+
 </launch>
