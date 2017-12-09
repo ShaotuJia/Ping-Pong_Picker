@@ -1,0 +1,8 @@
+<launch>
+
+ 
+<include file="$(find turtlebot_gazebo)/launch/turtlebot_world.launch">
+  <arg name="world_file" value="$(find ping_pong_picker)/worlds/ping_pong_court"/>
+</include>
+
+</launch>
