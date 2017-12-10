@@ -12,6 +12,7 @@
 #define INCLUDE_TURTLEBOT_WALKER_WALKER_HPP_
 
 #include <ros/ros.h>
+#include <tf/transform_listener.h>
 #include <geometry_msgs/Twist.h>
 #include <kobuki_msgs/BumperEvent.h>
 #include <gazebo_msgs/SetModelState.h>
@@ -19,20 +20,26 @@
 
 class Walk {
 private:
-	geometry_msgs::Twist forward;	///< The velocity of turtlebot move forward
-	geometry_msgs::Twist turn;	///< The angular velocity of rotation once the turtlebot collide.
+	geometry_msgs::Twist linear_velo;	///< The velocity of turtlebot move forward
+	geometry_msgs::Twist angular_velo;	///< The angular velocity of rotation once the turtlebot collide.
 	ros::NodeHandle n;	///< nodehandle for class walk
+	int work_time  = 0;	///< the turtlebot will stop moving once reach the work time limit
 	bool need_turn = false;	///< check whether turtlebot need to turn to avoid obstacle
 	geometry_msgs::Point position;
 
 
+
 public:
-	void move();
+	void linear_move(double time_limit);
+	void rotate(double angle);
 	void collision(const kobuki_msgs::BumperEvent::ConstPtr& bumper_state);
-	void set_forward(const double&);
-	void set_turn(const double&);
+	void set_linear(const double&);
+	void set_angular(const double&);
 	void set_initial_pose(const double&, const double&);
 	void set_up_position();
+	void set_up_worktime(int time);
+	//tf::StampedTransform where_turtle();
+	void where_turtle();
 };
 
 

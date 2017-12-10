@@ -9,6 +9,7 @@
  */
 
 #include <ros/ros.h>
+#include <tf/transform_listener.h>
 #include <geometry_msgs/Twist.h>
 #include <kobuki_msgs/BumperEvent.h>
 #include <gazebo_msgs/SetModelState.h>
@@ -19,13 +20,13 @@
  * @brief This function is the interface to set the velocity that moving turtlebot forward
  * @param x The linear velocity in forward direction
  */
-void Walk::set_forward(const double& x) {
-	forward.linear.x = x;
-	forward.linear.y = 0;
-	forward.linear.z = 0;
-	forward.angular.x = 0;
-	forward.angular.y = 0;
-	forward.angular.z = 0;
+void Walk::set_linear(const double& x) {
+	linear_velo.linear.x = x;
+	linear_velo.linear.y = 0;
+	linear_velo.linear.z = 0;
+	linear_velo.angular.x = 0;
+	linear_velo.angular.y = 0;
+	linear_velo.angular.z = 0;
 }
 
 /**
@@ -33,13 +34,13 @@ void Walk::set_forward(const double& x) {
  * when it needs to avoid obstacles
  * @param r The angular velocity around z_direction
  */
-void Walk::set_turn(const double& r) {
-	turn.linear.x = 0;
-	turn.linear.y = 0;
-	turn.linear.z = 0;
-	turn.angular.x = 0;
-	turn.angular.y = 0;
-	turn.angular.z = r;
+void Walk::set_angular(const double& r) {
+	angular_velo.linear.x = 0;
+	angular_velo.linear.y = 0;
+	angular_velo.linear.z = 0;
+	angular_velo.angular.x = 0;
+	angular_velo.angular.y = 0;
+	angular_velo.angular.z = r;
 }
 
 /**
@@ -98,10 +99,54 @@ void Walk::set_up_position() {
 }
 
 /**
+ * @brief This function is to set up the work time for each move; once time reaches the
+ * work time limit, the turtlebot will stop;
+ * @param time This is the time limit of moving
+ */
+void Walk::set_up_worktime(int time) {
+	work_time = time;
+}
+
+/**
+ * @brief This function is find the location of turtlebot by listening tf
+ * @return current position of turtlebot
+ */
+void where_turtle() {
+	tf::TransformListener listener;
+	ros::Rate rate(10);
+	while(ros::ok()) {
+		tf::StampedTransform transform;
+		listener.lookupTransform("/base_footprint","/odom",ros::Time(0),transform);
+		ROS_INFO("x = %f", transform.getOrigin().x());
+		rate.sleep();
+	}
+
+}
+/**
  * @brief The function that moves turtlebot forward and rotate turtlebot once hitting obstacles
  */
-void Walk::move() {
+void Walk::linear_move(double time_limit) {
 
+	// publisher to publish velocity for turtlebot
+	ros::Publisher move_pub = n.advertise<geometry_msgs::Twist>("/mobile_base/commands/velocity", 1000);
+
+	// subscriber to listen to topic /mobile_base/events/bumper
+	ros::Subscriber bumper = n.subscribe("/mobile_base/events/bumper", 1000, &Walk::collision, this);
+	//tf::StampedTransform position = where_turtle();
+	ros::Rate loop_rate(10);		// rate of publishing is 1 Hz
+	int counter = 0;	// check whether this move reaches the time limit
+	while (ros::ok() && ((counter/10)<time_limit)) {
+
+		move_pub.publish(linear_velo);	// publish linear movement command
+		ros::spinOnce();
+		loop_rate.sleep();
+		counter ++;
+
+	}
+
+}
+
+void Walk::rotate(double angle) {
 	// publisher to publish velocity for turtlebot
 	ros::Publisher move_pub = n.advertise<geometry_msgs::Twist>("/mobile_base/commands/velocity", 1000);
 
@@ -109,16 +154,14 @@ void Walk::move() {
 	ros::Subscriber bumper = n.subscribe("/mobile_base/events/bumper", 1000, &Walk::collision, this);
 
 	ros::Rate loop_rate(10);		// rate of publishing is 1 Hz
-	while (ros::ok()) {
 
-		if (need_turn) {
-			move_pub.publish(turn);	// publish move rotate command
-		} else {
-			move_pub.publish(forward);	// publish forward command
-		}
+	double counter = 0;	// check whether this move reaches the time limit
+	while (ros::ok() && (counter < angle)) {
+
+		move_pub.publish(angular_velo);	// publish rotate command
 		ros::spinOnce();
 		loop_rate.sleep();
+		counter += 0.1;
 	}
-
 
 }
