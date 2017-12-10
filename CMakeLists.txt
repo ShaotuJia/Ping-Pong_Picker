@@ -16,6 +16,7 @@ find_package(catkin REQUIRED COMPONENTS
   kobuki_msgs
   roslaunch
   gazebo_msgs
+  tf
 )
 
 ## System dependencies are found with CMake's conventions

@@ -2,13 +2,13 @@
 # For more info for the package, see https://github.com/ros-industrial/industrial_ci/blob/master/README.rst
 sudo: required 
 dist: trusty 
-language: generic 
+language: cpp 
 compiler:
   - gcc
 notifications:
   email:
-    on_success: always
-    on_failure: always
+    on_success: never
+    on_failure: never
 #    recipients:
 #      - shaotu.jia
 env:
