@@ -24,17 +24,8 @@ int main(int argc, char **argv) {
 	//walker.set_up_worktime(1);	///< set up the work time limit
 	//walker.linear_move(10);	///< move the turtlebot with a simple walk algorithm like roomba
 	//walker.rotate(3.5);
-	//walker.where_turtle();
+	walker.where_turtle();
 
-	tf::TransformListener listener;
-	ros::Rate rate(10);
-	while(ros::ok()) {
-		tf::StampedTransform transform;
-	    listener.waitForTransform("/base_footprint", "/odom",ros::Time(0), ros::Duration(10.0));
-		listener.lookupTransform("/base_footprint","/odom",ros::Time(0),transform);
-		ROS_INFO("get tf %f",transform.getOrigin().x());
-		rate.sleep();
-	}
 
 
 }

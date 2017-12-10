@@ -111,16 +111,16 @@ void Walk::set_up_worktime(int time) {
  * @brief This function is find the location of turtlebot by listening tf
  * @return current position of turtlebot
  */
-void where_turtle() {
+void Walk::where_turtle() {
 	tf::TransformListener listener;
 	ros::Rate rate(10);
 	while(ros::ok()) {
 		tf::StampedTransform transform;
+	    listener.waitForTransform("/base_footprint", "/odom",ros::Time(0), ros::Duration(10.0));
 		listener.lookupTransform("/base_footprint","/odom",ros::Time(0),transform);
-		ROS_INFO("x = %f", transform.getOrigin().x());
+		ROS_INFO("get tf %f",transform.getOrigin().x());
 		rate.sleep();
 	}
-
 }
 /**
  * @brief The function that moves turtlebot forward and rotate turtlebot once hitting obstacles
