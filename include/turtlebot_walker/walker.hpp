@@ -29,13 +29,14 @@ private:
 	geometry_msgs::Point goal;		///< the goal we want turtlebot to go
 	geometry_msgs::Point current_pose;	///< the current the position of turtlebot
 	tf::Quaternion current_orientation; ///< the current orientation of turtlebot
-	double rotate_tolerance = 0.01;		///< the tolerance of turtlebot rotate
-	double straight_tolerance = 0.1;	///< The tolerance of turtlebot move straight
+	double rotate_tolerance = 0.1;		///< the tolerance of turtlebot rotate
+	double straight_tolerance = 1;	///< The tolerance of turtlebot move straight
+	double orginal_orientation = 1.59;
 
 
 public:
-	void linear_move(double time_limit);
-	void rotate(double angle);
+	bool linear_move();
+	bool rotate(double angle);
 	void collision(const kobuki_msgs::BumperEvent::ConstPtr& bumper_state);
 	void set_linear(const double&);
 	void set_angular(const double&);
@@ -45,6 +46,10 @@ public:
 	void where_turtle();
 	geometry_msgs::Point get_current_pose();
 	tf::Quaternion get_current_orientation();
+	double diff_dist();
+	double diff_angle();
+	bool isSameOrient(tf::Quaternion current_orientation, tf::Quaternion desired_orientation);
+	bool isdiffAngle(tf::Quaternion current_orientation, double angle);
 };
 
 

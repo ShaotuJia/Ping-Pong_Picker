@@ -125,6 +125,60 @@ tf::Quaternion Walk::get_current_orientation() {
 }
 
 /**
+ * @brief the function is to get the linear distance between goal and current position
+ * @return dist the distance between two points
+ */
+double Walk::diff_dist() {
+	double dist = std::sqrt((goal.x-current_pose.x)*(goal.x-current_pose.x) + \
+				(goal.y-current_pose.y)*(goal.y-current_pose.y));
+	return dist;
+}
+
+/**
+ * @brief This function is get the desired angle for turtlebot towards goal
+ * @return angle the angle between two points
+ */
+double Walk::diff_angle() {
+	double angle = std::atan2(goal.y-current_pose.y, goal.x-current_pose.x);
+	return angle;
+}
+
+/**
+ * @brief This function is check whether the turtlebot towards desired angle
+ * @return bool
+ */
+bool Walk::isSameOrient(tf::Quaternion current_orientation, \
+		tf::Quaternion desired_orientation) {
+	double Rc, Pc, Yc;
+	tf::Matrix3x3(current_orientation).getRPY(Rc, Pc, Yc);
+
+	double Rd, Pd, Yd;
+	tf::Matrix3x3(desired_orientation).getRPY(Rd, Pd, Yd);
+
+	if (std::abs(Yc -Yd) < rotate_tolerance) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+/**
+ * @brief Check whether the current angle is desired angle
+ */
+bool Walk::isdiffAngle(tf::Quaternion current_orientation, double angle) {
+	double Rc, Pc, Yc;
+	tf::Matrix3x3(current_orientation).getRPY(Rc, Pc, Yc);
+
+	ROS_INFO("Yc %f", Yc);
+
+	if (std::abs(Yc - angle) < rotate_tolerance) {
+		return false;
+	} else {
+		return true;
+	}
+
+}
+/**
  * @brief This function is find the location of turtlebot by listening tf
  * @return current position of turtlebot
  */
@@ -144,23 +198,27 @@ void Walk::where_turtle() {
 /**
  * @brief The function that moves turtlebot forward and rotate turtlebot once hitting obstacles
  */
-void Walk::linear_move(double time_limit) {
+bool Walk::linear_move() {
+
+	// check whether turtlebot towards to the goal
 
 	// publisher to publish velocity for turtlebot
 	ros::Publisher move_pub = n.advertise<geometry_msgs::Twist>("/mobile_base/commands/velocity", 1000);
 
 	// subscriber to listen to topic /mobile_base/events/bumper
 	ros::Subscriber bumper = n.subscribe("/mobile_base/events/bumper", 1000, &Walk::collision, this);
-	//tf::StampedTransform position = where_turtle();
+
 	ros::Rate loop_rate(10);		// rate of publishing is 1 Hz
-	int counter = 0;	// check whether this move reaches the time limit
-	while (ros::ok() && ((counter/10)<time_limit)) {
+
+	// distance between current position and desire position
+	double dist = diff_dist();
+	bool isTowards = rotate(diff_angle());
+	while (ros::ok() && (dist < straight_tolerance) && isTowards) {
 
 		move_pub.publish(linear_velo);	// publish linear movement command
+		double dist = diff_dist();
 		ros::spinOnce();
 		loop_rate.sleep();
-		counter ++;
-
 	}
 
 }
@@ -169,24 +227,41 @@ void Walk::linear_move(double time_limit) {
  * @brief This function let turtlebot rotate to a desired angle
  * @param angle The desired angle in Radians
  */
-void Walk::rotate(double angle) {
+bool Walk::rotate(double angle) {
 	// publisher to publish velocity for turtlebot
 	ros::Publisher move_pub = n.advertise<geometry_msgs::Twist>("/mobile_base/commands/velocity", 1000);
 
 	// subscriber to listen to topic /mobile_base/events/bumper
 	ros::Subscriber bumper = n.subscribe("/mobile_base/events/bumper", 1000, &Walk::collision, this);
 
+	// listen to tf
+	tf::TransformListener listener;
+
 	// convert Yaw angle in unit radian to Quaternion
-	tf::Quaternion angle_Q = tf::createQuaternionFromYaw(angle);
+	//tf::Quaternion angle_Q = tf::createQuaternionFromYaw(angle);
 
-	ros::Rate loop_rate(10);		// rate of publishing is 1 Hz
+	//ROS_INFO("quaternion %f",angle_Q.getW());
 
-	//double counter = 0;	// check whether this move reaches the time limit
-	while (ros::ok() && (std::abs((current_orientation.getW() - angle_Q.getW())) < rotate_tolerance)) {
+	ros::Rate loop_rate(20);		// rate of publishing is 1 Hz
+
+	//where_turtle();
+
+	bool isdiff = true;
+
+	while (ros::ok() && isdiff) {
+		tf::StampedTransform transform;
+	    listener.waitForTransform("/base_footprint", "/odom",ros::Time(0), ros::Duration(10.0));
+		listener.lookupTransform("/base_footprint","/odom",ros::Time(0),transform);
+		current_pose.x = transform.getOrigin().x();
+		current_pose.y = transform.getOrigin().y();
+		current_orientation = transform.getRotation();
+
+		// check whether the turtlebot is in the desired orientation
+		isdiff = isdiffAngle(current_orientation, angle);
 
 		move_pub.publish(angular_velo);	// publish rotate command
 		ros::spinOnce();
 		loop_rate.sleep();
 	}
-
+	return true;
 }
