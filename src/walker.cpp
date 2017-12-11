@@ -108,6 +108,22 @@ void Walk::set_up_worktime(int time) {
 }
 
 /**
+ * @brief This function is to get the position of current turtlebot
+ * @return pose
+ */
+geometry_msgs::Point Walk::get_current_pose() {
+	return current_pose;
+}
+
+/**
+ * @brief This function is to get the orientation of current turtlebot
+ * @return orientation
+ */
+geometry_msgs::Quaternion Walk::get_current_orientation() {
+	return current_orientation;
+}
+
+/**
  * @brief This function is find the location of turtlebot by listening tf
  * @return current position of turtlebot
  */
@@ -118,7 +134,9 @@ void Walk::where_turtle() {
 		tf::StampedTransform transform;
 	    listener.waitForTransform("/base_footprint", "/odom",ros::Time(0), ros::Duration(10.0));
 		listener.lookupTransform("/base_footprint","/odom",ros::Time(0),transform);
-		ROS_INFO("get tf %f",transform.getOrigin().x());
+		current_pose.x = transform.getOrigin().x();
+		current_pose.y = transform.getOrigin().y();
+		current_orientation = transform.getRotation();
 		rate.sleep();
 	}
 }

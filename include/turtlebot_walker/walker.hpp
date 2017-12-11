@@ -25,8 +25,10 @@ private:
 	ros::NodeHandle n;	///< nodehandle for class walk
 	int work_time  = 0;	///< the turtlebot will stop moving once reach the work time limit
 	bool need_turn = false;	///< check whether turtlebot need to turn to avoid obstacle
-	geometry_msgs::Point position;
-
+	geometry_msgs::Point position;	///< the initial position of turtlebot
+	geometry_msgs::Point goal;		///< the goal we want turtlebot to go
+	geometry_msgs::Point current_pose;	///< the current the position of turtlebot
+	geometry_msgs::Quaternion current_orientation; ///< the current orientation of turtlebot
 
 
 public:
@@ -38,8 +40,9 @@ public:
 	void set_initial_pose(const double&, const double&);
 	void set_up_position();
 	void set_up_worktime(int time);
-	//tf::StampedTransform where_turtle();
 	void where_turtle();
+	geometry_msgs::Point get_current_pose();
+	geometry_msgs::Quaternion get_current_orientation();
 };
 
 
