@@ -14,6 +14,7 @@
 #include <kobuki_msgs/BumperEvent.h>
 #include <gazebo_msgs/SetModelState.h>
 #include <memory>
+#include <cmath>
 #include "turtlebot_walker/walker.hpp"
 
 /**
@@ -119,7 +120,7 @@ geometry_msgs::Point Walk::get_current_pose() {
  * @brief This function is to get the orientation of current turtlebot
  * @return orientation
  */
-geometry_msgs::Quaternion Walk::get_current_orientation() {
+tf::Quaternion Walk::get_current_orientation() {
 	return current_orientation;
 }
 
@@ -164,6 +165,10 @@ void Walk::linear_move(double time_limit) {
 
 }
 
+/**
+ * @brief This function let turtlebot rotate to a desired angle
+ * @param angle The desired angle in Radians
+ */
 void Walk::rotate(double angle) {
 	// publisher to publish velocity for turtlebot
 	ros::Publisher move_pub = n.advertise<geometry_msgs::Twist>("/mobile_base/commands/velocity", 1000);
@@ -171,15 +176,17 @@ void Walk::rotate(double angle) {
 	// subscriber to listen to topic /mobile_base/events/bumper
 	ros::Subscriber bumper = n.subscribe("/mobile_base/events/bumper", 1000, &Walk::collision, this);
 
+	// convert Yaw angle in unit radian to Quaternion
+	tf::Quaternion angle_Q = tf::createQuaternionFromYaw(angle);
+
 	ros::Rate loop_rate(10);		// rate of publishing is 1 Hz
 
-	double counter = 0;	// check whether this move reaches the time limit
-	while (ros::ok() && (counter < angle)) {
+	//double counter = 0;	// check whether this move reaches the time limit
+	while (ros::ok() && (std::abs((current_orientation.getW() - angle_Q.getW())) < rotate_tolerance)) {
 
 		move_pub.publish(angular_velo);	// publish rotate command
 		ros::spinOnce();
 		loop_rate.sleep();
-		counter += 0.1;
 	}
 
 }
