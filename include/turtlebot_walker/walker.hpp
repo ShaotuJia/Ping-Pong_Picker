@@ -53,6 +53,7 @@ public:
 	bool isSameOrient(tf::Quaternion current_orientation, tf::Quaternion desired_orientation);
 	bool isdiffAngle(tf::Quaternion current_orientation, double angle);
 	void set_up_goal(double x, double y);
+	void whether_reverse(tf::Quaternion current_orientation);
 };
 
 

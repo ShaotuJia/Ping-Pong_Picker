@@ -181,19 +181,43 @@ bool Walk::isdiffAngle(tf::Quaternion current_orientation, double angle) {
 	tf::Matrix3x3(current_orientation).getRPY(Rc, Pc, Yc);
 
 	// inverse rotation direction
-	Yc = -Yc;
+	//Yc = -Yc;
 
 	ROS_INFO("Yc = %f", Yc);
 	ROS_INFO("desired_angle = %f", desired_angle);
 	ROS_INFO("angle = %f", angle);
+	ROS_INFO("angular velo = %f", angular_velo.angular.z);
 
 	if (std::abs(Yc - angle) < rotate_tolerance) {
 		return false;
 	} else {
+
 		return true;
 	}
+}
+
+/**
+ * @brief This function is to check whether turtlebot need to rotate in reverse
+ * to quickly go to the desired angle
+ */
+void Walk::whether_reverse(tf::Quaternion current_orientation) {
+	double Rc, Pc, Yc;
+	tf::Matrix3x3(current_orientation).getRPY(Rc, Pc, Yc);
+
+	// inverse rotation direction
+	//Yc = -Yc;
+	// condition is true, reverse angular velocity direction
+	if (desired_angle > Yc) {
+		angular_velo.angular.z = -angular_velo.angular.z;
+	}
+
+	ROS_INFO("angular_velo %f", angular_velo.angular.z);
+
+
 
 }
+
+
 /**
  * @brief This function is find the location of turtlebot by listening tf
  * @return current position of turtlebot
@@ -236,13 +260,13 @@ bool Walk::linear_move(double x, double y) {
 
 	// distance between current position and desire position
 	double dist = 1000;
-	bool isTowards = rotate(diff_angle());
+
 
 	// origin of each time move
 	double move_origin_x = current_pose.x;
 	double move_origin_y = current_pose.y;
 
-	while (ros::ok() && (dist > straight_tolerance) && isTowards) {
+	while (ros::ok() && (dist > straight_tolerance)) {
 
 		tf::StampedTransform transform;
 	    listener.waitForTransform("/odom","/base_footprint",ros::Time(0), ros::Duration(10.0));
@@ -254,7 +278,19 @@ bool Walk::linear_move(double x, double y) {
 		ROS_INFO("x = %f", current_pose.x);
 		ROS_INFO("y = %f", current_pose.y);
 
-		move_pub.publish(linear_velo);	// publish linear movement command
+		// get desired angle
+		double angle_to_rotate = diff_angle();
+		// check whether the turtlebot is in the desired orientation
+		bool isAngleDiff = isdiffAngle(current_orientation, angle_to_rotate);
+		// if current orientation is different to desired angle then rotate
+		if (isAngleDiff) {
+			//whether_reverse(current_orientation);	// check whether need reverse
+			//bool isTowards = rotate(angle_to_rotate);
+			move_pub.publish(angular_velo);	// publish rotate command
+		} else {
+			move_pub.publish(linear_velo);	// publish linear movement command
+		}
+
 		double dist = diff_dist();
 		ROS_INFO("dist = %f", dist);
 		ros::spinOnce();
@@ -264,10 +300,12 @@ bool Walk::linear_move(double x, double y) {
 		if (dist < straight_tolerance) {
 			break;
 		}
+
 	}
 
 }
 
+#if 0
 /**
  * @brief This function let turtlebot rotate to a desired angle
  * @param angle The desired angle in Radians
@@ -301,6 +339,8 @@ bool Walk::rotate(double angle) {
 		current_pose.y = transform.getOrigin().y();
 		current_orientation = transform.getRotation();
 
+
+
 		// check whether the turtlebot is in the desired orientation
 		isdiff = isdiffAngle(current_orientation, angle);
 
@@ -310,3 +350,5 @@ bool Walk::rotate(double angle) {
 	}
 	return true;
 }
+
+#endif
