@@ -26,16 +26,18 @@ private:
 	int work_time  = 0;	///< the turtlebot will stop moving once reach the work time limit
 	bool need_turn = false;	///< check whether turtlebot need to turn to avoid obstacle
 	geometry_msgs::Point position;	///< the initial position of turtlebot
+
 	geometry_msgs::Point goal;		///< the goal we want turtlebot to go
 	geometry_msgs::Point current_pose;	///< the current the position of turtlebot
 	tf::Quaternion current_orientation; ///< the current orientation of turtlebot
-	double rotate_tolerance = 0.1;		///< the tolerance of turtlebot rotate
+	double rotate_tolerance = 0.05;		///< the tolerance of turtlebot rotate
 	double straight_tolerance = 1;	///< The tolerance of turtlebot move straight
 	double orginal_orientation = 1.59;
+	double desired_angle = 0;	///< the angle turtlebot need to turn
 
 
 public:
-	bool linear_move();
+	bool linear_move(double x, double y);
 	bool rotate(double angle);
 	void collision(const kobuki_msgs::BumperEvent::ConstPtr& bumper_state);
 	void set_linear(const double&);
@@ -50,6 +52,7 @@ public:
 	double diff_angle();
 	bool isSameOrient(tf::Quaternion current_orientation, tf::Quaternion desired_orientation);
 	bool isdiffAngle(tf::Quaternion current_orientation, double angle);
+	void set_up_goal(double x, double y);
 };
 
 

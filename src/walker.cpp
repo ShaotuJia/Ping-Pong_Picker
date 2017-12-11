@@ -100,6 +100,16 @@ void Walk::set_up_position() {
 }
 
 /**
+ * @brief This function is to set up the goal point of turtlebot
+ * @param x the coordinate in x-direction
+ * @param y the coordinate in y-direction
+ */
+void Walk::set_up_goal(double x, double y) {
+	goal.x = x;
+	goal.y = y;
+}
+
+/**
  * @brief This function is to set up the work time for each move; once time reaches the
  * work time limit, the turtlebot will stop;
  * @param time This is the time limit of moving
@@ -130,7 +140,7 @@ tf::Quaternion Walk::get_current_orientation() {
  */
 double Walk::diff_dist() {
 	double dist = std::sqrt((goal.x-current_pose.x)*(goal.x-current_pose.x) + \
-				(goal.y-current_pose.y)*(goal.y-current_pose.y));
+				(goal.y - current_pose.y)*(goal.y - current_pose.y));
 	return dist;
 }
 
@@ -140,6 +150,7 @@ double Walk::diff_dist() {
  */
 double Walk::diff_angle() {
 	double angle = std::atan2(goal.y-current_pose.y, goal.x-current_pose.x);
+	desired_angle = angle; 		///< define the member in class
 	return angle;
 }
 
@@ -169,7 +180,12 @@ bool Walk::isdiffAngle(tf::Quaternion current_orientation, double angle) {
 	double Rc, Pc, Yc;
 	tf::Matrix3x3(current_orientation).getRPY(Rc, Pc, Yc);
 
-	ROS_INFO("Yc %f", Yc);
+	// inverse rotation direction
+	Yc = -Yc;
+
+	ROS_INFO("Yc = %f", Yc);
+	ROS_INFO("desired_angle = %f", desired_angle);
+	ROS_INFO("angle = %f", angle);
 
 	if (std::abs(Yc - angle) < rotate_tolerance) {
 		return false;
@@ -187,8 +203,8 @@ void Walk::where_turtle() {
 	ros::Rate rate(10);
 	while(ros::ok()) {
 		tf::StampedTransform transform;
-	    listener.waitForTransform("/base_footprint", "/odom",ros::Time(0), ros::Duration(10.0));
-		listener.lookupTransform("/base_footprint","/odom",ros::Time(0),transform);
+	    listener.waitForTransform("/odom","/base_link",ros::Time(0), ros::Duration(10.0));
+		listener.lookupTransform("/odom","/base_link",ros::Time(0),transform);
 		current_pose.x = transform.getOrigin().x();
 		current_pose.y = transform.getOrigin().y();
 		current_orientation = transform.getRotation();
@@ -197,8 +213,10 @@ void Walk::where_turtle() {
 }
 /**
  * @brief The function that moves turtlebot forward and rotate turtlebot once hitting obstacles
+ * @param x The coordinate in x-direction
+ * @param y The coordinate in y-direction
  */
-bool Walk::linear_move() {
+bool Walk::linear_move(double x, double y) {
 
 	// check whether turtlebot towards to the goal
 
@@ -210,15 +228,42 @@ bool Walk::linear_move() {
 
 	ros::Rate loop_rate(10);		// rate of publishing is 1 Hz
 
+	// set up the goal point
+	set_up_goal(x, y);
+
+	// Listen to tf
+	tf::TransformListener listener;
+
 	// distance between current position and desire position
-	double dist = diff_dist();
+	double dist = 1000;
 	bool isTowards = rotate(diff_angle());
-	while (ros::ok() && (dist < straight_tolerance) && isTowards) {
+
+	// origin of each time move
+	double move_origin_x = current_pose.x;
+	double move_origin_y = current_pose.y;
+
+	while (ros::ok() && (dist > straight_tolerance) && isTowards) {
+
+		tf::StampedTransform transform;
+	    listener.waitForTransform("/odom","/base_footprint",ros::Time(0), ros::Duration(10.0));
+		listener.lookupTransform("/odom","/base_footprint",ros::Time(0),transform);
+		current_pose.x = transform.getOrigin().x();
+		current_pose.y = transform.getOrigin().y();
+		current_orientation = transform.getRotation();
+
+		ROS_INFO("x = %f", current_pose.x);
+		ROS_INFO("y = %f", current_pose.y);
 
 		move_pub.publish(linear_velo);	// publish linear movement command
 		double dist = diff_dist();
+		ROS_INFO("dist = %f", dist);
 		ros::spinOnce();
 		loop_rate.sleep();
+
+		// stop move once reach the goal
+		if (dist < straight_tolerance) {
+			break;
+		}
 	}
 
 }
