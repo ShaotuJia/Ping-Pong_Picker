@@ -26,10 +26,7 @@ int main(int argc, char **argv) {
 	//walker.rotate(3.5);
 	//walker.where_turtle();
 	//bool isReach = walker.rotate(0);
-	walker.linear_move(0,0);
-
-
-
+	walker.linear_move(7,1);
 
 }
 

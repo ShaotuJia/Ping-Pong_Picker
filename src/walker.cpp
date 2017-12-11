@@ -183,10 +183,6 @@ bool Walk::isdiffAngle(tf::Quaternion current_orientation, double angle) {
 	// inverse rotation direction
 	//Yc = -Yc;
 
-	ROS_INFO("Yc = %f", Yc);
-	ROS_INFO("desired_angle = %f", desired_angle);
-	ROS_INFO("angle = %f", angle);
-	ROS_INFO("angular velo = %f", angular_velo.angular.z);
 
 	if (std::abs(Yc - angle) < rotate_tolerance) {
 		return false;
@@ -200,21 +196,30 @@ bool Walk::isdiffAngle(tf::Quaternion current_orientation, double angle) {
  * @brief This function is to check whether turtlebot need to rotate in reverse
  * to quickly go to the desired angle
  */
-void Walk::whether_reverse(tf::Quaternion current_orientation) {
-	double Rc, Pc, Yc;
-	tf::Matrix3x3(current_orientation).getRPY(Rc, Pc, Yc);
+bool Walk::whether_reverse(tf::Quaternion current_orientation) {
+	double Rc2, Pc2, Yc2;
+	tf::Matrix3x3(current_orientation).getRPY(Rc2, Pc2, Yc2);
 
-	// inverse rotation direction
-	//Yc = -Yc;
-	// condition is true, reverse angular velocity direction
-	if (desired_angle > Yc) {
-		angular_velo.angular.z = -angular_velo.angular.z;
+	ROS_INFO("Yc = %f", Yc2*57.3);
+		ROS_INFO("desired_angle = %f", desired_angle*57.3);
+		ROS_INFO("angular velo = %f", angular_velo.angular.z);
+
+	// conditions for whether reverse angular velocity
+	if (desired_angle > 0 && Yc2 > 0 && (Yc2 - desired_angle) > 0) {
+		return true;
+		ROS_INFO("!!reverse angular velocity!!");
+	} else if (desired_angle < 0 && Yc2 < 0 && (Yc2 - desired_angle) > 0) {
+		return true;
+		ROS_INFO("!!reverse angular velocity!!");
+	} else if (desired_angle < 0 && Yc2 > 0 && (Yc2 - desired_angle) > 0) {
+		return true;
+		ROS_INFO("!!reverse angular velocity!!");
+	}else if (desired_angle > 0 && Yc2 < 0 && ((Yc2+6.28)-desired_angle) > 0) {
+		return true;
+		ROS_INFO("!!reverse angular velocity!!");
+	} else {
+		return false;
 	}
-
-	ROS_INFO("angular_velo %f", angular_velo.angular.z);
-
-
-
 }
 
 
@@ -261,10 +266,8 @@ bool Walk::linear_move(double x, double y) {
 	// distance between current position and desire position
 	double dist = 1000;
 
-
-	// origin of each time move
-	double move_origin_x = current_pose.x;
-	double move_origin_y = current_pose.y;
+	// current angular velocity
+	geometry_msgs::Twist current_angular = angular_velo;
 
 	while (ros::ok() && (dist > straight_tolerance)) {
 
@@ -284,9 +287,23 @@ bool Walk::linear_move(double x, double y) {
 		bool isAngleDiff = isdiffAngle(current_orientation, angle_to_rotate);
 		// if current orientation is different to desired angle then rotate
 		if (isAngleDiff) {
-			//whether_reverse(current_orientation);	// check whether need reverse
-			//bool isTowards = rotate(angle_to_rotate);
-			move_pub.publish(angular_velo);	// publish rotate command
+			bool reverse = false;
+			reverse = whether_reverse(current_orientation); // check whether need reverse
+
+			if (reverse) {
+				ROS_INFO("need reverse !!!!");
+				ROS_INFO ("current_angluar = %f", current_angular.angular.z);
+			} else {
+				ROS_INFO("NO reverse !!!");
+				ROS_INFO ("current_angluar = %f", current_angular.angular.z);
+			}
+
+			if (reverse) {
+				current_angular.angular.z = -angular_velo.angular.z;
+
+
+			}
+			move_pub.publish(current_angular);	// publish rotate command
 		} else {
 			move_pub.publish(linear_velo);	// publish linear movement command
 		}
