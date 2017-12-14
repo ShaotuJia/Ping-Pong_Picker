@@ -124,7 +124,7 @@ script:
 
 # Generate code coverage report
 # ---------------------------------------
-after_script:
+after_failure:
   - cd ~/catkin_ws/build
   - lcov --directory . --capture --output-file coverage.info
   - lcov --remove coverage.info '/opt/*' '/usr/*' '*/devel/*' '*test_*' '*_test*' --output-file coverage.info
