@@ -1,5 +1,6 @@
 # Ping-Pong_Picker
 [![Build Status](https://travis-ci.org/ShaotuJia/Ping-Pong_Picker.svg?branch=master)](https://travis-ci.org/ShaotuJia/Ping-Pong_Picker)
+[![Coverage Status](https://coveralls.io/repos/github/ShaotuJia/Ping-Pong_Picker/badge.svg?branch=master)](https://coveralls.io/github/ShaotuJia/Ping-Pong_Picker?branch=master)
 ## Abstract
 This is the final project for ENPM808X: Software Development for Robotics. This project will achieve the motion part of picker-robot based on turtlebot. Finally, the turtlebot will walk on table tennis court without collision. 
 

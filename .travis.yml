@@ -1,75 +1,120 @@
-#   This .travis.yml works to check "this" repository, namely `industrial_ci`. Do not get confused with the check of "client" repositories (repos that use travis configs in this repo).
+# Generic .travis.yml file for running continuous integration on Travis-CI for
+# any ROS package.
+#
+# Available here:
+#   - http://felixduvallet.github.io/ros-travis-integration
+#   - https://github.com/felixduvallet/ros-travis-integration
+#
+# This installs ROS on a clean Travis-CI virtual machine, creates a ROS
+# workspace, resolves all listed dependencies, and sets environment variables
+# (setup.bash). Then, it compiles the entire ROS workspace (ensuring there are
+# no compilation errors), and runs all the tests. If any of the compilation/test
+# phases fail, the build is marked as a failure.
+#
+# We handle two types of package dependencies specified in the package manifest:
+#   - system dependencies that can be installed using `rosdep`, including other
+#     ROS packages and system libraries. These dependencies must be known to
+#     `rosdistro` and get installed using apt-get.
+#   - package dependencies that must be checked out from source. These are handled by
+#     `wstool`, and should be listed in a file named dependencies.rosinstall.
+#
+# There are two variables you may want to change:
+#   - ROS_DISTRO (default is indigo). Note that packages must be available for
+#     ubuntu 14.04 trusty.
+#   - ROSINSTALL_FILE (default is dependencies.rosinstall inside the repo
+#     root). This should list all necessary repositories in wstool format (see
+#     the ros wiki). If the file does not exists then nothing happens.
+#
+# See the README.md for more information.
+#
+# Author: Felix Duvallet <felixd@gmail.com>
 
-#  Greatly inspired by JSK travis: https://github.com/jsk-ros-pkg/jsk_travis
+# NOTE: The build lifecycle on Travis.ci is something like this:
+#    before_install
+#    install
+#    before_script
+#    script
+#    after_success or after_failure
+#    after_script
+#    OPTIONAL before_deploy
+#    OPTIONAL deploy
+#    OPTIONAL after_deploy
 
-#sudo: required  # Not required by industrial_ci that uses Docker.
-#dist: trusty    # Not required by industrial_ci that uses Docker.
-services:
-  - docker
-# Force travis to use its minimal image with default Python settings
-language: generic
-notifications:
-  #  Whoever receives success and/or failure via email
-  email:
-    recipients:
-      - gm130s@gmail.com  # Change this to yours should you copy this file.
+################################################################################
+
+# Use ubuntu trusty (14.04) with sudo privileges.
+dist: trusty
+sudo: required
+language:
+  - generic
+cache:
+  - apt
+
+# Configuration variables. All variables are global now, but this can be used to
+# trigger a build matrix for different ROS distributions if desired.
 env:
   global:
-    - POST_PROCESS='echo "post processing reached"'
-    - BEFORE_SCRIPT='echo current dir: $(pwd)'
+    - ROS_DISTRO=indigo
+    - ROS_CI_DESKTOP="`lsb_release -cs`"  # e.g. [precise|trusty|...]
+    - CI_SOURCE_PATH=$(pwd)
+    - ROSINSTALL_FILE=$CI_SOURCE_PATH/dependencies.rosinstall
+    - CATKIN_OPTIONS=$CI_SOURCE_PATH/catkin.options
+    - ROS_PARALLEL_JOBS='-j8 -l6'
+    # Set the python path manually to include /usr/-/python2.7/dist-packages
+    # as this is where apt-get installs python packages.
+    - PYTHONPATH=$PYTHONPATH:/usr/lib/python2.7/dist-packages:/usr/local/lib/python2.7/dist-packages
 
-  matrix:
-    - ROS_DISTRO=hydro  USE_MOCKUP='industrial_ci/mockups/industrial_ci_testpkg' VERBOSE_OUTPUT='true'
-    - ROS_DISTRO=indigo USE_MOCKUP='industrial_ci/mockups/industrial_ci_testpkg' VERBOSE_OUTPUT='true' CATKIN_LINT=true
-    - ROS_DISTRO=indigo USE_MOCKUP='industrial_ci/mockups/industrial_ci_testpkg' CATKIN_LINT=pedantic EXPECT_EXIT_CODE=1
-    - ROS_DISTRO=indigo USE_MOCKUP='industrial_ci/mockups/industrial_ci_testpkg' ROSDEP_SKIP_KEYS="rospy_tutorials rostest" EXPECT_EXIT_CODE=1
-    - ROS_DISTRO=indigo USE_MOCKUP='industrial_ci/mockups/testpkg_broken_install'  EXPECT_EXIT_CODE=1
-    - ROS_DISTRO=indigo USE_MOCKUP='industrial_ci/mockups/testpkg_broken_install'  CATKIN_CONFIG='--no-install -DCMAKE_CXX_FLAGS="-Werror=uninitialized -Werror=return-type"'
-    - ROS_DISTRO=indigo DOCKER_IMAGE='mluedtke/ci-test:indigo'
-    - ROS_DISTRO=indigo DOCKER_IMAGE='ros:indigo-ros-core'  ADDITIONAL_DEBS="build-essential python-catkin-tools python-pip"
-    - ROS_DISTRO=indigo NOT_TEST_BUILD='true'
-    - ROS_DISTRO=indigo NOT_TEST_INSTALL='true' BEFORE_SCRIPT='test -z "${CXX+x}"' # test that CXX is not set
-    - ROS_DISTRO=indigo NOT_TEST_INSTALL='true' CXX=/usr/bin/gcc BEFORE_SCRIPT='test -z "${CXX+x}"' EXPECT_EXIT_CODE=1 # test the CXX test
-    - ROS_DISTRO=indigo NOT_TEST_BUILD='true' NOT_TEST_INSTALL='true'  # This may not make much sense. Only for testing purpose.
-    - ROS_DISTRO=indigo NOT_TEST_BUILD='true' NOT_TEST_INSTALL='true' POST_PROCESS='I_am_supposed_to_fail'
-    - ROS_DISTRO=indigo CATKIN_PARALLEL_JOBS='-p1' ROS_PARALLEL_JOBS='-j1'  # Intend build on low-power platform
-    # - env: ROS_DISTRO=indigo PRERELEASE=true  ## Comment out because this is meaningless for always failing without prerelease testable contents in industrial_ci.
-    - ROS_DISTRO=indigo PRERELEASE=true PRERELEASE_DOWNSTREAM_DEPTH=1 DOCKER_BASE_IMAGE=something
-    - ROS_DISTRO=indigo PRERELEASE=true USE_MOCKUP='industrial_ci/mockups/failing_test' EXPECT_EXIT_CODE=1
-    - ROS_DISTRO=kinetic PRERELEASE=true PRERELEASE_REPONAME=industrial_ci
-    - ROS_DISTRO=indigo APTKEY_STORE_SKS=hkp://ha.pool.sks-keyservers.vet  # Passing wrong SKS URL as a break test. Should still pass.
-    - ROS_DISTRO=indigo UPSTREAM_WORKSPACE=debian AFTER_SCRIPT='ccache 2> /dev/null && exit 1; [ "$?" = "127" ]'
-     # Using default file name for ROSINSTALL_FILENAME, test CCACHE, verify cache was filled
-    - ROS_DISTRO=indigo UPSTREAM_WORKSPACE=file CCACHE_DIR=$HOME/.ccache AFTER_SCRIPT='num=($(ccache -s | grep "files in cache")) && (( num[-1] > 0 ))'
-    - ROS_DISTRO=indigo UPSTREAM_WORKSPACE=file USE_DEB=true  # Expected to fail. See https://github.com/ros-industrial/industrial_ci/pull/74
-    - ROS_DISTRO=indigo UPSTREAM_WORKSPACE=https://raw.githubusercontent.com/ros-industrial/industrial_ci/master/.travis.rosinstall
-    - ROS_DISTRO=indigo USE_DEB=true  # Checking backup compatibility with UPSTREAM_WORKSPACE
-    - ROS_DISTRO=indigo USE_DEB=false # Checking backup compatibility with UPSTREAM_WORKSPACE
-    - ROS_DISTRO=indigo ADDITIONAL_DEBS="ros-indigo-opencv3" VERBOSE_OUTPUT='false'
-    - ROS_DISTRO=indigo ADDITIONAL_DEBS="ros-hydro-opencv3" DEBUG_BASH='true' EXPECT_EXIT_CODE=100 # This should fail (trying from a wrong distro).
-    - ROS_DISTRO=jade   UPSTREAM_WORKSPACE=file  ROSINSTALL_FILENAME=.ci.rosinstall  # Testing arbitrary file name without ROS_DISTRO suffix. As of 6/3/2016 this fails due to https://github.com/ros-industrial/industrial_core/pull/144#issuecomment-223186764
-    - ROS_DISTRO=jade   APTKEY_STORE_SKS=hkp://ha.pool.sks-keyservers.vet  _DO_NOT_FOLD=true # Passing wrong SKS URL as a break test. Should still pass.
-    - ROS_DISTRO=jade   UPSTREAM_WORKSPACE=file ROSINSTALL_FILENAME=.i.do.not.exist EXPECT_EXIT_CODE=1
-    - ROS_DISTRO=kinetic AFTER_SCRIPT='grep -q ID=ubuntu /etc/os-release && grep -q VERSION_CODENAME=xenial /etc/os-release'
-    - ROS_DISTRO=kinetic BEFORE_SCRIPT='grep -q ID=debian /etc/os-release && grep -q VERSION_ID=\"8\" /etc/os-release' EXPECT_EXIT_CODE=1
-    - ROS_DISTRO=kinetic OS_NAME=debian OS_CODE_NAME=jessie AFTER_SCRIPT='grep -q ID=debian /etc/os-release && grep -q VERSION_ID=\"8\" /etc/os-release'
-    - ROS_DISTRO=kinetic OS_NAME=debian EXPECT_EXIT_CODE=1
-    - ROS_DISTRO=kinetic OS_NAME=debian OS_CODE_NAME=xenial EXPECT_EXIT_CODE=1
-    - ROS_DISTRO=kinetic DOCKER_BASE_IMAGE="ros:kinetic-ros-base" NOT_TEST_BUILD='true' DEBUG_BASH='true' VERBOSE_OUTPUT='false'
-    - ROS_DISTRO=kinetic APTKEY_STORE_SKS=hkp://ha.pool.sks-keyservers.vet  # Passing wrong SKS URL as a break test. Should still pass.
-    - ROS_DISTRO=lunar ROS_REPO=ros-shadow-fixed USE_MOCKUP='industrial_ci/mockups/industrial_ci_testpkg'
-    - ROS_DISTRO=kinetic _EXTERNAL_REPO='ros-industrial/industrial_core#kinetic-devel'
-    - ROS_DISTRO=kinetic _EXTERNAL_REPO='ros-industrial/motoman_experimental#kinetic-devel' UPSTREAM_WORKSPACE=file BEFORE_SCRIPT='touch $CATKIN_WORKSPACE/src/ros-industrial/industrial_experimental/IRC_v2/CATKIN_IGNORE'
-    - ROS_DISTRO=kinetic _EXTERNAL_REPO='ros-controls/ros_control#kinetic-devel' UPSTREAM_WORKSPACE=file ROSINSTALL_FILENAME=ros_control.rosinstall ROS_PARALLEL_TEST_JOBS=-j1
-    - ROS_DISTRO=kinetic _EXTERNAL_REPO='ipa320/cob_calibration_data#indigo_dev' ROS_REPO=ros UPSTREAM_WORKSPACE=file AFTER_SCRIPT='./.travis.xacro_test.sh'
-    - ROS_DISTRO=indigo _EXTERNAL_REPO='ros/actionlib#38ce66e2ae2ec9c19cf12ab22d57a8134a9285be' ROS_REPO=ros ABICHECK_URL=url ABICHECK_MERGE=true # actual URL will not be used in the case
-    - ROS_DISTRO=kinetic _EXTERNAL_REPO='ros-industrial/ros_canopen#0.7.5' ROS_REPO=ros ABICHECK_URL='github:ros-industrial/ros_canopen#0.7.1' ABICHECK_MERGE=false EXPECT_EXIT_CODE=1
-    - ROS_DISTRO=kinetic _EXTERNAL_REPO='ros-industrial/ros_canopen#0.7.6' ABICHECK_URL='github:ros-industrial/ros_canopen#0.7.5' ABICHECK_MERGE=false
-matrix:
-  allow_failures:
-    - env: ROS_DISTRO=indigo NOT_TEST_BUILD='true' NOT_TEST_INSTALL='true' POST_PROCESS='I_am_supposed_to_fail'
-    - env: ROS_DISTRO=indigo UPSTREAM_WORKSPACE=file USE_DEB=true  # Expected to fail. See https://github.com/ros-industrial/industrial_ci/pull/74
-    - env: ROS_DISTRO=jade   UPSTREAM_WORKSPACE=file  ROSINSTALL_FILENAME=.ci.rosinstall
+################################################################################
+
+# Install system dependencies, namely a very barebones ROS setup.
+before_install:
+  - sudo sh -c "echo \"deb http://packages.ros.org/ros/ubuntu $ROS_CI_DESKTOP main\" > /etc/apt/sources.list.d/ros-latest.list"
+  - sudo apt-key adv --keyserver hkp://ha.pool.sks-keyservers.net:80 --recv-key 421C365BD9FF1F717815A3895523BAEEB01FA116
+  - sudo apt-get update -qq
+  - sudo apt-get install -y python-catkin-pkg python-rosdep python-wstool ros-$ROS_DISTRO-catkin
+  - source /opt/ros/$ROS_DISTRO/setup.bash
+  # Prepare rosdep to install dependencies.
+  - sudo rosdep init
+  - rosdep update
+
+# Create a catkin workspace with the package under integration.
+install:
+  - mkdir -p ~/catkin_ws/src
+  - cd ~/catkin_ws/src
+  - catkin_init_workspace
+  # Create the devel/setup.bash (run catkin_make with an empty workspace) and
+  # source it to set the path variables.
+  - cd ~/catkin_ws
+  - catkin_make
+  - source devel/setup.bash
+  # Add the package under integration to the workspace using a symlink.
+  - cd ~/catkin_ws/src
+  - ln -s $CI_SOURCE_PATH .
+
+# Install all dependencies, using wstool first and rosdep second.
+# wstool looks for a ROSINSTALL_FILE defined in the environment variables.
+before_script:
+  # source dependencies: install using wstool.
+  - cd ~/catkin_ws/src
+  - wstool init
+  - if [[ -f $ROSINSTALL_FILE ]] ; then wstool merge $ROSINSTALL_FILE ; fi
+  - wstool up
+  # package depdencies: install using rosdep.
+  - cd ~/catkin_ws
+  - rosdep install -y --from-paths src --ignore-src --rosdistro $ROS_DISTRO
+
+# Compile and test (mark the build as failed if any step fails). If the
+# CATKIN_OPTIONS file exists, use it as an argument to catkin_make, for example
+# to blacklist certain packages.
+#
+# NOTE on testing: `catkin_make run_tests` will show the output of the tests
+# (gtest, nosetest, etc..) but always returns 0 (success) even if a test
+# fails. Running `catkin_test_results` aggregates all the results and returns
+# non-zero when a test fails (which notifies Travis the build failed).
 script:
-  - industrial_ci/_wrap_test.sh # this script is only for internal use
-  - if ! [ -z "$POST_PROCESS" ]; then $POST_PROCESS; fi
+  - source /opt/ros/$ROS_DISTRO/setup.bash
+  - cd ~/catkin_ws
+  - catkin_make $( [ -f $CATKIN_OPTIONS ] && cat $CATKIN_OPTIONS )
+  # Run the tests, ensuring the path is set correctly.
+  - source devel/setup.bash
+  - catkin_make run_tests && catkin_test_results
