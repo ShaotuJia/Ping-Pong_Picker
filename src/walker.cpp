@@ -247,7 +247,8 @@ void Walk::where_turtle() {
  */
 bool Walk::linear_move(double x, double y) {
 
-	// check whether turtlebot towards to the goal
+	// wait for topic /mobile_base/commands/velocity start
+	auto message = ros::topic::waitForMessage<geometry_msgs::Twist>("/mobile_base/commands/velocity",ros::Duration(5));
 
 	// publisher to publish velocity for turtlebot
 	ros::Publisher move_pub = n.advertise<geometry_msgs::Twist>("/mobile_base/commands/velocity", 1000);
@@ -290,6 +291,7 @@ bool Walk::linear_move(double x, double y) {
 			bool reverse = false;
 			reverse = whether_reverse(current_orientation); // check whether need reverse
 
+			// check whether the turtlebot reverses its angular velocity
 			if (reverse) {
 				ROS_INFO("need reverse !!!!");
 				ROS_INFO ("current_angluar = %f", current_angular.angular.z);
@@ -321,51 +323,3 @@ bool Walk::linear_move(double x, double y) {
 	}
 
 }
-
-#if 0
-/**
- * @brief This function let turtlebot rotate to a desired angle
- * @param angle The desired angle in Radians
- */
-bool Walk::rotate(double angle) {
-	// publisher to publish velocity for turtlebot
-	ros::Publisher move_pub = n.advertise<geometry_msgs::Twist>("/mobile_base/commands/velocity", 1000);
-
-	// subscriber to listen to topic /mobile_base/events/bumper
-	ros::Subscriber bumper = n.subscribe("/mobile_base/events/bumper", 1000, &Walk::collision, this);
-
-	// listen to tf
-	tf::TransformListener listener;
-
-	// convert Yaw angle in unit radian to Quaternion
-	//tf::Quaternion angle_Q = tf::createQuaternionFromYaw(angle);
-
-	//ROS_INFO("quaternion %f",angle_Q.getW());
-
-	ros::Rate loop_rate(20);		// rate of publishing is 1 Hz
-
-	//where_turtle();
-
-	bool isdiff = true;
-
-	while (ros::ok() && isdiff) {
-		tf::StampedTransform transform;
-	    listener.waitForTransform("/base_footprint", "/odom",ros::Time(0), ros::Duration(10.0));
-		listener.lookupTransform("/base_footprint","/odom",ros::Time(0),transform);
-		current_pose.x = transform.getOrigin().x();
-		current_pose.y = transform.getOrigin().y();
-		current_orientation = transform.getRotation();
-
-
-
-		// check whether the turtlebot is in the desired orientation
-		isdiff = isdiffAngle(current_orientation, angle);
-
-		move_pub.publish(angular_velo);	// publish rotate command
-		ros::spinOnce();
-		loop_rate.sleep();
-	}
-	return true;
-}
-
-#endif

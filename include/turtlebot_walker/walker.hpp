@@ -1,6 +1,6 @@
 /*
  * @file walker.hpp
- * @brief This file declares the class Walk for a simple walk algorithm
+ * @brief This file declares the class Walk for a turtlebot walk to desired location in ping-pong court
  * @author Shaotu Jia
  * @copyright Copyright (C) 2007 Free Software Foundation, Inc.
  * @details GNU GENERAL PUBLIC LICENSE. Version 3, 29 June 2007

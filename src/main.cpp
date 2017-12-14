@@ -1,6 +1,6 @@
 /*
  * @file main.cpp
- * @brief This is the main file to run turtlebot like roomba
+ * @brief This is the main file to let turtlebot move in ping-pong court to pick up balls
  * @author Shaotu Jia
  * @copyright Copyright (C) 2007 Free Software Foundation, Inc.
  * @details GNU GENERAL PUBLIC LICENSE. Version 3, 29 June 2007
@@ -26,7 +26,7 @@ int main(int argc, char **argv) {
 	//walker.rotate(3.5);
 	//walker.where_turtle();
 	//bool isReach = walker.rotate(0);
-	walker.linear_move(7,1);
+	walker.linear_move(1,7);
 
 }
 
