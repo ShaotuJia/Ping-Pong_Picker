@@ -118,7 +118,7 @@ void Walk::set_up_goal(double x, double y) {
 
 /**
  * @brief This function is an interface to obtain the position of goal
- * @return goal
+ * @return goal The goal position
  */
 geometry_msgs::Point Walk::get_goal() {
 	return goal;
@@ -127,7 +127,7 @@ geometry_msgs::Point Walk::get_goal() {
 
 /**
  * @brief This function is to get the position of current turtlebot
- * @return pose
+ * @return pose The current position
  */
 geometry_msgs::Point Walk::get_current_pose() {
 	return current_pose;
@@ -161,36 +161,19 @@ double Walk::diff_angle() {
 	return angle;
 }
 
-/**
- * @brief This function is check whether the turtlebot towards desired angle
- * @return bool
- */
-bool Walk::isSameOrient(tf::Quaternion current_orientation, \
-		tf::Quaternion desired_orientation) {
-	double Rc, Pc, Yc;
-	tf::Matrix3x3(current_orientation).getRPY(Rc, Pc, Yc);
-
-	double Rd, Pd, Yd;
-	tf::Matrix3x3(desired_orientation).getRPY(Rd, Pd, Yd);
-
-	if (std::abs(Yc -Yd) < rotate_tolerance) {
-		return true;
-	} else {
-		return false;
-	}
-}
 
 /**
  * @brief Check whether the current angle is desired angle
+ * @param current_orientation This the orientation of turtlebot at current moment
+ * @param angle The desired angle
+ *
  */
 bool Walk::isdiffAngle(tf::Quaternion current_orientation, double angle) {
-	double Rc, Pc, Yc;
-	tf::Matrix3x3(current_orientation).getRPY(Rc, Pc, Yc);
+	double Rc, Pc, Yc;	// Initialize the three variable for the angle in RPY
+	tf::Matrix3x3(current_orientation).getRPY(Rc, Pc, Yc);	// transfer orientation from quaternion to RPY
 
-	// inverse rotation direction
-	//Yc = -Yc;
-
-
+	// if the difference between current angle and desired angle is under tolerance
+	// return true, otherwise false
 	if (std::abs(Yc - angle) < rotate_tolerance) {
 		return false;
 	} else {
@@ -202,6 +185,7 @@ bool Walk::isdiffAngle(tf::Quaternion current_orientation, double angle) {
 /**
  * @brief This function is to check whether turtlebot need to rotate in reverse
  * to quickly go to the desired angle
+ * @param current_orientation of turtlebot
  */
 bool Walk::whether_reverse(tf::Quaternion current_orientation) {
 	double Rc2, Pc2, Yc2;
@@ -231,21 +215,27 @@ bool Walk::whether_reverse(tf::Quaternion current_orientation) {
 
 
 /**
- * @brief This function is find the location of turtlebot by listening tf
- * @return current position of turtlebot
+ * @brief This function is find the state of turtlebot by listening tf
+ * @return current state of turtlebot
  */
-void Walk::where_turtle() {
+geometry_msgs::Transform Walk::where_turtle() {
 	tf::TransformListener listener;
+
+	geometry_msgs::Transform current_state;
 	ros::Rate rate(10);
 	while(ros::ok()) {
 		tf::StampedTransform transform;
 	    listener.waitForTransform("/odom","/base_link",ros::Time(0), ros::Duration(10.0));
 		listener.lookupTransform("/odom","/base_link",ros::Time(0),transform);
-		current_pose.x = transform.getOrigin().x();
-		current_pose.y = transform.getOrigin().y();
-		current_orientation = transform.getRotation();
+		current_state.translation.x = transform.getOrigin().x();
+		current_state.translation.y = transform.getOrigin().y();
+		current_state.rotation.w = transform.getRotation().w();
+		current_state.rotation.z = transform.getRotation().z();
+		ros::spinOnce();
 		rate.sleep();
+		break;
 	}
+	return current_state;
 }
 /**
  * @brief The function that moves turtlebot forward and rotate turtlebot once hitting obstacles

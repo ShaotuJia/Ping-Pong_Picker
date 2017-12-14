@@ -22,7 +22,9 @@
 // initialize a shared_ptr for NodeHandle for each test unit.
 std::shared_ptr<ros::NodeHandle> nh;
 
-
+/**
+ * @brief Test the set up of initial turtlebot position
+ */
 TEST(TEST_initial_pose, initial_pose) {
 	Walk walker;
 	walker.set_initial_pose(0,0);	///< set up initial pose for turtlebot
@@ -31,6 +33,9 @@ TEST(TEST_initial_pose, initial_pose) {
 
 }
 
+/**
+ * @brief Test the set up of the goal which turtlebot will move to
+ */
 TEST(Test_Goal, goal) {
 	Walk walker;
 	int goal_x = 10;
@@ -39,6 +44,13 @@ TEST(Test_Goal, goal) {
 	geometry_msgs::Point target = walker.get_goal();
 	EXPECT_EQ(target.x, goal_x);
 	EXPECT_EQ(target.y, goal_y);
+}
+
+/**
+ * @brief Test the set up of
+ */
+TEST(Test_Velocity, angular) {
+
 }
 
 int main(int argc, char **argv) {

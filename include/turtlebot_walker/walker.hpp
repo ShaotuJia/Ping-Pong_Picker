@@ -14,6 +14,7 @@
 #include <ros/ros.h>
 #include <tf/transform_listener.h>
 #include <geometry_msgs/Twist.h>
+#include <geometry_msgs/Transform.h>
 #include <kobuki_msgs/BumperEvent.h>
 #include <gazebo_msgs/SetModelState.h>
 #include <memory>
@@ -43,12 +44,11 @@ public:
 	void set_angular(const double&);
 	void set_initial_pose(const double&, const double&);
 	void set_up_position();
-	void where_turtle();
+	geometry_msgs::Transform where_turtle();
 	geometry_msgs::Point get_current_pose();
 	tf::Quaternion get_current_orientation();
 	double diff_dist();
 	double diff_angle();
-	bool isSameOrient(tf::Quaternion current_orientation, tf::Quaternion desired_orientation);
 	bool isdiffAngle(tf::Quaternion current_orientation, double angle);
 	void set_up_goal(double x, double y);
 	bool whether_reverse(tf::Quaternion current_orientation);
