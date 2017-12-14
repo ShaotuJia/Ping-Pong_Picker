@@ -1,6 +1,7 @@
 /*
  * @file walker.cpp
- * @brief This file implements the class members for simple walker algorithm
+ * @brief This file implements a class that moves turtlebot to desired point
+ * when given the 2-D coordinate of goal
  * @author Shaotu Jia
  * @copyright Copyright (C) 2007 Free Software Foundation, Inc.
  * @details GNU GENERAL PUBLIC LICENSE. Version 3, 29 June 2007
@@ -31,6 +32,14 @@ void Walk::set_linear(const double& x) {
 }
 
 /**
+ * @brief This function is to obtain the linear velocity of turtlebot
+ * @return linear_velocity
+ */
+geometry_msgs::Twist Walk::get_linear_velo() {
+	return linear_velo;
+}
+
+/**
  * @brief This function is the interface to set the angular velocity of turtlebot
  * when it needs to avoid obstacles
  * @param r The angular velocity around z_direction
@@ -42,6 +51,14 @@ void Walk::set_angular(const double& r) {
 	angular_velo.angular.x = 0;
 	angular_velo.angular.y = 0;
 	angular_velo.angular.z = r;
+}
+
+/**
+ * @brief This function is to obtain the angular velocity of turtlebot
+ * @return angualr_velocity
+ */
+geometry_msgs::Twist Walk::get_angular_velo() {
+	return angular_velo;
 }
 
 /**
@@ -61,6 +78,39 @@ void Walk::set_initial_pose(const double& x, const double& y) {
 geometry_msgs::Point Walk::get_initial_pose() {
 	return position;
 }
+
+/**
+ * @brief Set up the straight tolerance; the tolerance between desired goal and actual goal
+ * @param straight tolerance
+ */
+void Walk::set_straight_tolerance(const double& tolerance) {
+	straight_tolerance = tolerance;
+}
+
+/**
+ * @brief Obtain the straight tolerance
+ * @return straight_tolerance
+ */
+double Walk::get_straight_tolerance() {
+	return straight_tolerance;
+}
+
+/**
+ * @brief Set up the tolerance in rotation
+ * @param angular_tolerance
+ */
+void Walk::set_rotate_tolerance(const double& tolerance) {
+	rotate_tolerance = tolerance;
+}
+
+/**
+ * @brief Get rotate tolerance
+ * @return rotate_tolerance
+ */
+double Walk::get_rotate_tolerance() {
+	return rotate_tolerance;
+}
+
 /**
  * @brief This is a callback function to subscribe the topic /mobile_base/events/bumper
  * @param bumper_state The message from subscribed topic
@@ -122,23 +172,6 @@ void Walk::set_up_goal(double x, double y) {
  */
 geometry_msgs::Point Walk::get_goal() {
 	return goal;
-}
-
-
-/**
- * @brief This function is to get the position of current turtlebot
- * @return pose The current position
- */
-geometry_msgs::Point Walk::get_current_pose() {
-	return current_pose;
-}
-
-/**
- * @brief This function is to get the orientation of current turtlebot
- * @return orientation
- */
-tf::Quaternion Walk::get_current_orientation() {
-	return current_orientation;
 }
 
 /**
@@ -214,29 +247,7 @@ bool Walk::whether_reverse(tf::Quaternion current_orientation) {
 }
 
 
-/**
- * @brief This function is find the state of turtlebot by listening tf
- * @return current state of turtlebot
- */
-geometry_msgs::Transform Walk::where_turtle() {
-	tf::TransformListener listener;
 
-	geometry_msgs::Transform current_state;
-	ros::Rate rate(10);
-	while(ros::ok()) {
-		tf::StampedTransform transform;
-	    listener.waitForTransform("/odom","/base_link",ros::Time(0), ros::Duration(10.0));
-		listener.lookupTransform("/odom","/base_link",ros::Time(0),transform);
-		current_state.translation.x = transform.getOrigin().x();
-		current_state.translation.y = transform.getOrigin().y();
-		current_state.rotation.w = transform.getRotation().w();
-		current_state.rotation.z = transform.getRotation().z();
-		ros::spinOnce();
-		rate.sleep();
-		break;
-	}
-	return current_state;
-}
 /**
  * @brief The function that moves turtlebot forward and rotate turtlebot once hitting obstacles
  * @param x The coordinate in x-direction
@@ -269,6 +280,7 @@ bool Walk::linear_move(double x, double y) {
 
 	while (ros::ok() && (dist > straight_tolerance)) {
 
+		// get the tf between odom and base_footprint
 		tf::StampedTransform transform;
 	    listener.waitForTransform("/odom","/base_footprint",ros::Time(0), ros::Duration(10.0));
 		listener.lookupTransform("/odom","/base_footprint",ros::Time(0),transform);
@@ -307,16 +319,32 @@ bool Walk::linear_move(double x, double y) {
 			move_pub.publish(linear_velo);	// publish linear movement command
 		}
 
-		double dist = diff_dist();
+	    double dist = diff_dist();       // find the distance from current position to goal
 		ROS_INFO("dist = %f", dist);
 		ros::spinOnce();
 		loop_rate.sleep();
 
 		// stop move once reach the goal
 		if (dist < straight_tolerance) {
+
 			break;
 		}
 
+		// stop once obstacle
+		if (need_turn) {
+			ROS_WARN_STREAM("TurtleBot find obstacle at ( " << current_pose.x << " , " << current_pose.y);
+			break;
+		}
+
+	}
+
+	// check distance from current point to goal
+	double dist_to_goal = diff_dist();
+
+	if (dist_to_goal < straight_tolerance) {
+		return true;
+	} else {
+		return false;
 	}
 
 }

@@ -26,7 +26,6 @@ private:
 	ros::NodeHandle n;	///< nodehandle for class walk
 	bool need_turn = false;	///< check whether turtlebot need to turn to avoid obstacle
 	geometry_msgs::Point position;	///< the initial position of turtlebot
-
 	geometry_msgs::Point goal;		///< the goal we want turtlebot to go
 	geometry_msgs::Point current_pose;	///< the current the position of turtlebot
 	tf::Quaternion current_orientation; ///< the current orientation of turtlebot
@@ -34,6 +33,7 @@ private:
 	double straight_tolerance = 1;	///< The tolerance of turtlebot move straight
 	double orginal_orientation = 1.59;
 	double desired_angle = 0;	///< the angle turtlebot need to turn
+	double dist = 1000;			///< distance between current position and desire position
 
 
 public:
@@ -54,6 +54,12 @@ public:
 	bool whether_reverse(tf::Quaternion current_orientation);
 	geometry_msgs::Point get_initial_pose();
 	geometry_msgs::Point get_goal();
+	geometry_msgs::Twist get_linear_velo();
+	geometry_msgs::Twist get_angular_velo();
+	void set_straight_tolerance(const double&);
+	void set_rotate_tolerance(const double&);
+	double get_straight_tolerance();
+	double get_rotate_tolerance();
 };
 
 

@@ -18,7 +18,6 @@
 #include <memory>
 #include "turtlebot_walker/walker.hpp"
 
-
 // initialize a shared_ptr for NodeHandle for each test unit.
 std::shared_ptr<ros::NodeHandle> nh;
 
@@ -47,10 +46,49 @@ TEST(Test_Goal, goal) {
 }
 
 /**
- * @brief Test the set up of
+ * @brief Test the set up of linear and angular velocity
  */
-TEST(Test_Velocity, angular) {
+TEST(Test_Velocity, linear_angular) {
+	Walk walker;
+	double linear_velocity = 0.2;
+	double angular_velocity = 0.1;
+	walker.set_linear(linear_velocity);
+	walker.set_angular(angular_velocity);
+	geometry_msgs::Twist turtle_linear = walker.get_linear_velo();
+	geometry_msgs::Twist turtle_angular = walker.get_angular_velo();
 
+	EXPECT_EQ(linear_velocity, turtle_linear.linear.x);
+	EXPECT_EQ(angular_velocity, turtle_angular.angular.z);
+
+}
+
+/**
+ * @brief Test the set up of tolerance
+ */
+TEST(Test_Tolerance, staright_rotate) {
+	Walk walker;
+	double straight = 2;
+	double rotate = 0.1;
+	walker.set_straight_tolerance(straight);
+	walker.set_rotate_tolerance(rotate);
+	double straight_result = walker.get_straight_tolerance();
+	double rotate_result = walker.get_rotate_tolerance();
+
+	EXPECT_EQ(straight, straight_result);
+	EXPECT_EQ(rotate, rotate_result);
+}
+
+/**
+ * @brief This is to test whether the linear move can go to desired point
+ */
+TEST(Test_move, linear_move) {
+
+	Walk walker;
+	walker.set_initial_pose(0, 0);	///< set up initial pose for turtlebot
+	walker.set_linear(0.2);	///< set up linear velocity when moving forward
+	walker.set_angular(0.1);	///< set up angular velocity when hitting obstacles
+	bool reach = walker.linear_move(1,7);
+	EXPECT_EQ(reach,true);
 }
 
 int main(int argc, char **argv) {
