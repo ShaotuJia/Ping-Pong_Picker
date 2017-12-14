@@ -23,7 +23,6 @@ private:
 	geometry_msgs::Twist linear_velo;	///< The velocity of turtlebot move forward
 	geometry_msgs::Twist angular_velo;	///< The angular velocity of rotation once the turtlebot collide.
 	ros::NodeHandle n;	///< nodehandle for class walk
-	int work_time  = 0;	///< the turtlebot will stop moving once reach the work time limit
 	bool need_turn = false;	///< check whether turtlebot need to turn to avoid obstacle
 	geometry_msgs::Point position;	///< the initial position of turtlebot
 
@@ -44,7 +43,6 @@ public:
 	void set_angular(const double&);
 	void set_initial_pose(const double&, const double&);
 	void set_up_position();
-	void set_up_worktime(int time);
 	void where_turtle();
 	geometry_msgs::Point get_current_pose();
 	tf::Quaternion get_current_orientation();
@@ -54,6 +52,7 @@ public:
 	bool isdiffAngle(tf::Quaternion current_orientation, double angle);
 	void set_up_goal(double x, double y);
 	bool whether_reverse(tf::Quaternion current_orientation);
+	geometry_msgs::Point get_initial_pose();
 };
 
 

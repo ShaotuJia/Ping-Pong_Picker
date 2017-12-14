@@ -55,6 +55,13 @@ void Walk::set_initial_pose(const double& x, const double& y) {
 }
 
 /**
+ * @brief This function is to obtain the initial position of turtlebot
+ * return position
+ */
+geometry_msgs::Point Walk::get_initial_pose() {
+	return position;
+}
+/**
  * @brief This is a callback function to subscribe the topic /mobile_base/events/bumper
  * @param bumper_state The message from subscribed topic
  */
@@ -109,14 +116,6 @@ void Walk::set_up_goal(double x, double y) {
 	goal.y = y;
 }
 
-/**
- * @brief This function is to set up the work time for each move; once time reaches the
- * work time limit, the turtlebot will stop;
- * @param time This is the time limit of moving
- */
-void Walk::set_up_worktime(int time) {
-	work_time = time;
-}
 
 /**
  * @brief This function is to get the position of current turtlebot

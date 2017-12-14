@@ -209,5 +209,28 @@ roslaunch_add_file_check(launch)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
 
+if(CATKIN_ENABLE_TESTING)
+  find_package(rostest REQUIRED)
+
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 --coverage")
+
+  add_rostest_gtest(
+  picker_test
+  test/picker_test.launch
+  test/picker_test.cpp
+  src/walker.cpp
+  )
+  target_link_libraries(
+  picker_test
+  ${catkin_LIBRARIES}
+  )
+#add_dependencies(
+#  picker_test
+#  picker
+
+#  ${catkin_EXPORTED_TARGETS}
+#  )
+endif()
+
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)

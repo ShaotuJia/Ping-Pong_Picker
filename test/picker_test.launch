@@ -1,0 +1,18 @@
+<launch>
+
+ 
+<include file="$(find turtlebot_gazebo)/launch/turtlebot_world.launch">
+  <arg name="world_file" value="$(find ping_pong_picker)/worlds/ping_pong_court"/>
+</include>
+
+<node 
+ name="picker"
+ pkg="ping_pong_picker"
+ type="picker"
+/>
+
+<test 
+ pkg="ping_pong_picker" test-name="picker_test" type="picker_test"/>
+ 
+
+</launch>
