@@ -53,6 +53,7 @@ public:
 	void set_up_goal(double x, double y);
 	bool whether_reverse(tf::Quaternion current_orientation);
 	geometry_msgs::Point get_initial_pose();
+	geometry_msgs::Point get_goal();
 };
 
 

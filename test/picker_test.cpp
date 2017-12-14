@@ -31,6 +31,16 @@ TEST(TEST_initial_pose, initial_pose) {
 
 }
 
+TEST(Test_Goal, goal) {
+	Walk walker;
+	int goal_x = 10;
+	int goal_y = 10;
+	walker.set_up_goal(goal_x, goal_y);
+	geometry_msgs::Point target = walker.get_goal();
+	EXPECT_EQ(target.x, goal_x);
+	EXPECT_EQ(target.y, goal_y);
+}
+
 int main(int argc, char **argv) {
   ros::init(argc, argv, "picker_test");
   nh.reset(new ros::NodeHandle);

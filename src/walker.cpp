@@ -116,6 +116,14 @@ void Walk::set_up_goal(double x, double y) {
 	goal.y = y;
 }
 
+/**
+ * @brief This function is an interface to obtain the position of goal
+ * @return goal
+ */
+geometry_msgs::Point Walk::get_goal() {
+	return goal;
+}
+
 
 /**
  * @brief This function is to get the position of current turtlebot
