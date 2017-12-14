@@ -224,12 +224,12 @@ if(CATKIN_ENABLE_TESTING)
   picker_test
   ${catkin_LIBRARIES}
   )
-#add_dependencies(
-#  picker_test
-#  picker
-
-#  ${catkin_EXPORTED_TARGETS}
-#  )
+add_dependencies(
+  picker_test
+  picker
+  
+  ${catkin_EXPORTED_TARGETS}
+  )
 endif()
 
 ## Add folders to be run by python nosetests
