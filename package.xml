@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package>
   <name>ping_pong_picker</name>
-  <version>0.1</version>
+  <version>0.0.1</version>
   <description>The turtlebot_walker package</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
