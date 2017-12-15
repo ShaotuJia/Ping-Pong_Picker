@@ -17,6 +17,7 @@
 #include <gazebo_msgs/SetModelState.h>
 #include <memory>
 #include "turtlebot_walker/walker.hpp"
+#include "turtlebot_walker/mode.hpp"
 
 // initialize a shared_ptr for NodeHandle for each test unit.
 std::shared_ptr<ros::NodeHandle> nh;
@@ -24,7 +25,7 @@ std::shared_ptr<ros::NodeHandle> nh;
 /**
  * @brief Test the set up of initial turtlebot position
  */
-TEST(TEST_initial_pose, initial_pose) {
+TEST(TEST_Walk, initial_pose) {
 	Walk walker;
 	walker.set_initial_pose(0,0);	///< set up initial pose for turtlebot
 	geometry_msgs::Point initial_pose = walker.get_initial_pose();
@@ -35,7 +36,7 @@ TEST(TEST_initial_pose, initial_pose) {
 /**
  * @brief Test the set up of the goal which turtlebot will move to
  */
-TEST(Test_Goal, goal) {
+TEST(Test_Walk, goal_set_up) {
 	Walk walker;
 	int goal_x = 10;
 	int goal_y = 10;
@@ -48,7 +49,7 @@ TEST(Test_Goal, goal) {
 /**
  * @brief Test the set up of linear and angular velocity
  */
-TEST(Test_Velocity, linear_angular) {
+TEST(Test_Walk, linear_angular_velocity) {
 	Walk walker;
 	double linear_velocity = 0.2;
 	double angular_velocity = 0.1;
@@ -65,7 +66,7 @@ TEST(Test_Velocity, linear_angular) {
 /**
  * @brief Test the set up of tolerance
  */
-TEST(Test_Tolerance, staright_rotate) {
+TEST(Test_Walk, staright_rotate_tolerance) {
 	Walk walker;
 	double straight = 2;
 	double rotate = 0.1;
@@ -79,18 +80,34 @@ TEST(Test_Tolerance, staright_rotate) {
 }
 
 /**
- * @brief This is to test whether the linear move can go to desired point
+ * @brief This is to test the function set flag in Mode class
  */
-TEST(Test_move, linear_move) {
+TEST(Test_Mode, set_flag) {
 
+	Mode mode;
+	double x = 1;
+	double y = 2;
+	geometry_msgs::Point flag = mode.set_flag(x, y);
+	EXPECT_EQ(x, flag.x);
+	EXPECT_EQ(y, flag.y);
+
+}
+
+/**
+ * @brief This is to test the go_route function
+ */
+TEST(Test_Movement, ALL_Move_functions) {
+	Mode mode;
 	Walk walker;
 	walker.set_initial_pose(0, 0);	///< set up initial pose for turtlebot
-	walker.set_linear(0.2);	///< set up linear velocity when moving forward
-	walker.set_angular(0.1);	///< set up angular velocity when hitting obstacles
 	walker.set_up_position();		///< set up the initial position
-	bool reach = walker.linear_move(7,1);
-	EXPECT_EQ(reach,false);
+	geometry_msgs::Point flag_1 = mode.set_flag(7,1); 	///< set flag 1;
+
+	std::vector<geometry_msgs::Point> flag_seq = {flag_1};		///< set up this route
+	auto finish = mode.go_route(flag_seq);		///< go this route
+	EXPECT_FALSE(finish);
 }
+
 
 int main(int argc, char **argv) {
   ros::init(argc, argv, "picker_test");
