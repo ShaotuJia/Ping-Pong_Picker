@@ -6,6 +6,9 @@
  * @details GNU GENERAL PUBLIC LICENSE. Version 3, 29 June 2007
  * Everyone is permitted to copy and distribute verbatim copies
  * of this license document, but changing it is not allowed.
+ * @description This is a demo to show how turtlebot walk in a ping-pong court.
+ * The turtlebot will walk start from the origin and go to several desired point;
+ * finally go back to the origin.
  */
 
 #include <ros/ros.h>
