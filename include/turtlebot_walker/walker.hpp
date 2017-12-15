@@ -33,7 +33,6 @@ private:
 	double straight_tolerance = 1;	///< The tolerance of turtlebot move straight
 	double orginal_orientation = 1.59;
 	double desired_angle = 0;	///< the angle turtlebot need to turn
-	double dist = 1000;			///< distance between current position and desire position
 
 
 public:
