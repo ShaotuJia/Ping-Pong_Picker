@@ -251,7 +251,7 @@ bool Walk::whether_reverse(tf::Quaternion current_orientation) {
 	} else if (desired_angle < 0 && Yc2 > 0 && (Yc2 - desired_angle) < 3.14) {
 		return true;
 		ROS_INFO("!!reverse angular velocity!!");
-	}else if (desired_angle > 0 && Yc2 < 0 && ((Yc2+6.28)-desired_angle) < 3.14) {
+	} else if (desired_angle > 0 && Yc2 < 0 && ((Yc2+6.28)-desired_angle) < 3.14) {
 		return true;
 		ROS_INFO("!!reverse angular velocity!!");
 	} else {
@@ -287,9 +287,6 @@ bool Walk::linear_move(double x, double y) {
 
 	// distance between current position and desire position
 	double dist = 1000;
-
-	// reset angular_velo before each movement
-	//reset_angular();
 
 	// current angular velocity
 	geometry_msgs::Twist current_angular = angular_velo;
@@ -327,10 +324,10 @@ bool Walk::linear_move(double x, double y) {
 			// check whether the turtlebot reverses its angular velocity
 			if (reverse) {
 				ROS_INFO("need reverse !!!!");
-				ROS_INFO ("current_angluar = %f", current_angular.angular.z);
+				ROS_INFO("current_angluar = %f", current_angular.angular.z);
 			} else {
 				ROS_INFO("NO reverse !!!");
-				ROS_INFO ("current_angluar = %f", current_angular.angular.z);
+				ROS_INFO("current_angluar = %f", current_angular.angular.z);
 			}
 
 		} else {
