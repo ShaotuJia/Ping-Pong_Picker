@@ -245,13 +245,13 @@ bool Walk::whether_reverse(tf::Quaternion current_orientation) {
 	if (desired_angle > 0 && Yc2 > 0 && (Yc2 - desired_angle) > 0) {
 		return true;
 		ROS_INFO("!!reverse angular velocity!!");
-	} else if (desired_angle < 0 && Yc2 < 0 && (Yc2 - desired_angle) > 0) {
+	} else if (desired_angle < 0 && Yc2 < 0 && ((Yc2+6.28) - (desired_angle+6.28)) > 0) {
 		return true;
 		ROS_INFO("!!reverse angular velocity!!");
-	} else if (desired_angle < 0 && Yc2 > 0 && (Yc2 - desired_angle) > 0) {
+	} else if (desired_angle < 0 && Yc2 > 0 && (Yc2 - desired_angle) < 3.14) {
 		return true;
 		ROS_INFO("!!reverse angular velocity!!");
-	}else if (desired_angle > 0 && Yc2 < 0 && ((Yc2+6.28)-desired_angle) > 0) {
+	}else if (desired_angle > 0 && Yc2 < 0 && ((Yc2+6.28)-desired_angle) < 3.14) {
 		return true;
 		ROS_INFO("!!reverse angular velocity!!");
 	} else {

@@ -19,26 +19,16 @@
  */
 int main(int argc, char **argv) {
 	ros::init(argc, argv, "walk_turtlebot");	///< Initialize node with name "walk_turtlebot"
-	auto mode = std::make_unique<Mode>();
-	geometry_msgs::Point flag = mode->set_flag(1,7);
-    auto reach1 = mode->go_flag(flag);
+	std::unique_ptr<Mode> mode;
 
-
-#if 0
-	Walk walker;	///< declare a object for class Walk
-	walker.set_initial_pose(0, 0);	///< set up initial pose for turtlebot
-	walker.set_linear(0.2);	///< set up linear velocity when moving forward
-	walker.set_angular(0.1);	///< set up angular velocity when hitting obstacles
-	//walker.set_up_position();	///< locate turtlebot in desired location
-	//walker.set_up_worktime(1);	///< set up the work time limit
-	//walker.linear_move(10);	///< move the turtlebot with a simple walk algorithm like roomba
-	//walker.rotate(3.5);
-	//walker.where_turtle();
-	//bool isReach = walker.rotate(0);
-	auto reach1 = walker.linear_move(1,7);
-	auto reach2 = walker.linear_move(7,7);
-
-#endif
+	geometry_msgs::Point flag_1 = mode->set_flag(0.3,1); 	///< set flag 1; left up corner
+	geometry_msgs::Point flag_2 = mode->set_flag(0.3,9.7);	///< set flag 2; right up corner
+	geometry_msgs::Point flag_3 = mode->set_flag(9.7,9.5);	///< set flag 3; right down corner
+	geometry_msgs::Point flag_4 = mode->set_flag(9.7,0.3);	///< set flag 4; left down corner
+	geometry_msgs::Point flag_5 = mode->set_flag(1, 0.5);	///< set flag 5; left up corner
+	std::vector<geometry_msgs::Point> flag_seq = {flag_1, flag_2, flag_3, flag_4, flag_5};		///< set up this route
+	auto finish = mode->go_route(flag_seq);		///< go this route
+	auto isHome = mode->go_home();		///< go origin
 
 }
 

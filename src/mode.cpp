@@ -20,7 +20,6 @@
 #include "turtlebot_walker/walker.hpp"
 #include "turtlebot_walker/mode.hpp"
 
-
 /**
  * @brief This function is to set up a flag that turtlebot will go to
  * @param x The coordinate in x-direction
@@ -36,31 +35,39 @@ geometry_msgs::Point Mode::set_flag(const double& x, const double& y) {
 }
 
 /**
- * @brief This function is to set up a series of flag that turtlebot will go to
- * @param flag_seq
- */
-void Mode::set_flag_seq(std::vector<geometry_msgs::Point> seq) {
-	flag_seq = seq;
-}
-
-/**
- * @brief This function is to obtain the flag_seq
- */
-std::vector<geometry_msgs::Point> Mode::get_flag_seq() {
-	return flag_seq;
-}
-
-/**
  * @brief This function is to go to the desired point
  * @param flag The desired point turtlebot will go to
+ * @return isReach whether the turtlebot reach the desired point
  */
 bool Mode::go_flag(geometry_msgs::Point flag) {
 
 	Walk walker;	///< declare a object for class Walk
 	walker.set_linear(0.2);	///< set up linear velocity when moving forward
 	walker.set_angular(0.1);	///< set up angular velocity when hitting obstacles
-	auto reach = walker.linear_move(flag.x,flag.y);
-	return reach;
+	walker.set_straight_tolerance(0.5);  ///< set up tolerance in straigth distance
+	auto isReach = walker.linear_move(flag.x,flag.y);
+	return isReach;
+}
 
+/**
+ * @brief This function go a series of flag
+ * @param flag_seq A series point turtlebot will go to
+ * @return
+ */
+bool Mode::go_route(std::vector<geometry_msgs::Point> flag_seq) {
+	auto isFinish = false;
+	for (auto flag:flag_seq) {
+		 isFinish = go_flag(flag);
+	}
+	return isFinish;
+}
+
+/**
+ * @breif This function let turtlebot go to the origin from current location
+ */
+bool Mode::go_home() {
+	geometry_msgs::Point origin = set_flag(0, 0);
+	auto isHome = go_flag(origin);
+	return isHome;
 }
 
