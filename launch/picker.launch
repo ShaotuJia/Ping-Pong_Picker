@@ -13,4 +13,13 @@
  output="screen"
 />
 
+<arg name="baging" default="0"/>
+<arg name="duration" default="300"/>
+<node
+ name="picker_record"
+ pkg="rosbag"
+ type="record"
+ args="-a -O walker.bag --duration=$(arg duration) -x '/camera/(.*)'"
+ if="$(arg baging)"
+/>
 </launch>
