@@ -25,15 +25,16 @@
 
 class Mode {
  private:
-	geometry_msgs::Point flag;		///< A point that the turtlebot desires to go
+	//geometry_msgs::Point flag;		///< A point that the turtlebot desires to go
 	std::vector<geometry_msgs::Point> flag_seq;	///< A series point that turtlebot desires to go
 
  public:
-	void set_flag(const double&, const double&);
+	geometry_msgs::Point set_flag(const double&, const double&);
 	void set_flag_seq(std::vector<geometry_msgs::Point>);
 	geometry_msgs::Point get_flag();
 	std::vector<geometry_msgs::Point> get_flag_seq();
-	bool go_flag();
+    bool go_flag(geometry_msgs::Point);
+	//void go_flag();
 	bool near_wall();
 };
 

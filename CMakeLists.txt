@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(ping_pong_picker)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-add_compile_options(-std=c++11)
+add_compile_options(-std=c++14)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -113,7 +113,7 @@ generate_messages(
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES turtlebot_walker
+#  LIBRARIES turtlebot_
 #  CATKIN_DEPENDS roscpp rospy std_msgs
 #  DEPENDS system_lib
 )
@@ -159,7 +159,7 @@ include_directories(
 #   ${catkin_LIBRARIES}
 # )
 
-add_executable(picker src/main.cpp src/walker.cpp)
+add_executable(picker src/main.cpp src/walker.cpp src/mode.cpp)
 target_link_libraries(picker ${catkin_LIBRARIES})
 add_dependencies(picker turtlebot_walker_generate_messages_cpp)
 roslaunch_add_file_check(launch)
@@ -219,6 +219,7 @@ if(CATKIN_ENABLE_TESTING)
   test/picker_test.launch
   test/picker_test.cpp
   src/walker.cpp
+  src/mode.cpp
   )
   target_link_libraries(
   picker_test

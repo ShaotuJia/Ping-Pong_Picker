@@ -25,10 +25,14 @@
  * @brief This function is to set up a flag that turtlebot will go to
  * @param x The coordinate in x-direction
  * @param y The coordinate in y-direction
+ * @return point
  */
-void Mode::set_flag(const double& x, const double& y) {
+geometry_msgs::Point Mode::set_flag(const double& x, const double& y) {
+
+	geometry_msgs:: Point flag;
 	flag.x = x;
 	flag.y = y;
+	return flag;
 }
 
 /**
@@ -40,18 +44,23 @@ void Mode::set_flag_seq(std::vector<geometry_msgs::Point> seq) {
 }
 
 /**
- * @brief This function is to obtain the flag point
- */
-geometry_msgs::Point Mode::get_flag() {
-	return flag;
-}
-
-/**
  * @brief This function is to obtain the flag_seq
  */
-
 std::vector<geometry_msgs::Point> Mode::get_flag_seq() {
 	return flag_seq;
 }
 
+/**
+ * @brief This function is to go to the desired point
+ * @param flag The desired point turtlebot will go to
+ */
+bool Mode::go_flag(geometry_msgs::Point flag) {
+
+	Walk walker;	///< declare a object for class Walk
+	walker.set_linear(0.2);	///< set up linear velocity when moving forward
+	walker.set_angular(0.1);	///< set up angular velocity when hitting obstacles
+	auto reach = walker.linear_move(flag.x,flag.y);
+	return reach;
+
+}
 
