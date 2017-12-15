@@ -54,6 +54,16 @@ void Walk::set_angular(const double& r) {
 }
 
 /**
+ * @breif This function is reset angular velocity into positive direction before each movement
+ */
+geometry_msgs::Twist Walk::reset_current_angular(geometry_msgs::Twist current_angular) {
+	if (current_angular.angular.z < 0) {
+		current_angular.angular.z = std::abs(current_angular.angular.z);
+	}
+	return current_angular;
+}
+
+/**
  * @brief This function is to obtain the angular velocity of turtlebot
  * @return angualr_velocity
  */
@@ -127,6 +137,9 @@ void Walk::collision(const kobuki_msgs::BumperEvent::ConstPtr& bumper_state) {
 
 /**
  * @brief The function is to set up the initial position of turtlebot in gazebo world
+ * @warning set up position will cause the exchange of x, y coordinate;
+ * for example, you want to go to point (1,7); after set_up_position(), the coordinate
+ * will be (7,1)
  */
 void Walk::set_up_position() {
 	// Wait for service gazebo/set_model_state
@@ -275,6 +288,9 @@ bool Walk::linear_move(double x, double y) {
 	// distance between current position and desire position
 	double dist = 1000;
 
+	// reset angular_velo before each movement
+	//reset_angular();
+
 	// current angular velocity
 	geometry_msgs::Twist current_angular = angular_velo;
 
@@ -300,6 +316,14 @@ bool Walk::linear_move(double x, double y) {
 			bool reverse = false;
 			reverse = whether_reverse(current_orientation); // check whether need reverse
 
+			current_angular = reset_current_angular(current_angular);	// reset angular to positive
+
+			if (reverse) {
+
+				current_angular.angular.z = -angular_velo.angular.z;
+			}
+			move_pub.publish(current_angular);	// publish rotate command
+
 			// check whether the turtlebot reverses its angular velocity
 			if (reverse) {
 				ROS_INFO("need reverse !!!!");
@@ -309,15 +333,10 @@ bool Walk::linear_move(double x, double y) {
 				ROS_INFO ("current_angluar = %f", current_angular.angular.z);
 			}
 
-			if (reverse) {
-				current_angular.angular.z = -angular_velo.angular.z;
-
-
-			}
-			move_pub.publish(current_angular);	// publish rotate command
 		} else {
 			move_pub.publish(linear_velo);	// publish linear movement command
 		}
+
 
 	    double dist = diff_dist();       // find the distance from current position to goal
 		ROS_INFO("dist = %f", dist);

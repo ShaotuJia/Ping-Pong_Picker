@@ -87,8 +87,9 @@ TEST(Test_move, linear_move) {
 	walker.set_initial_pose(0, 0);	///< set up initial pose for turtlebot
 	walker.set_linear(0.2);	///< set up linear velocity when moving forward
 	walker.set_angular(0.1);	///< set up angular velocity when hitting obstacles
-	bool reach = walker.linear_move(1,7);
-	EXPECT_EQ(reach,true);
+	walker.set_up_position();		///< set up the initial position
+	bool reach = walker.linear_move(7,1);
+	EXPECT_EQ(reach,false);
 }
 
 int main(int argc, char **argv) {

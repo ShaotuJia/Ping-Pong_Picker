@@ -26,7 +26,8 @@ int main(int argc, char **argv) {
 	//walker.rotate(3.5);
 	//walker.where_turtle();
 	//bool isReach = walker.rotate(0);
-	auto reach = walker.linear_move(7,1);
+	auto reach1 = walker.linear_move(1,7);
+	auto reach2 = walker.linear_move(7,7);
 
 }
 

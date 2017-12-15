@@ -42,6 +42,7 @@ public:
 	void collision(const kobuki_msgs::BumperEvent::ConstPtr& bumper_state);
 	void set_linear(const double&);
 	void set_angular(const double&);
+	geometry_msgs::Twist reset_current_angular(geometry_msgs::Twist);
 	void set_initial_pose(const double&, const double&);
 	void set_up_position();
 	geometry_msgs::Transform where_turtle();
